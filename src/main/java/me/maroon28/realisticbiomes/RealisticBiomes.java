@@ -83,7 +83,7 @@ public final class RealisticBiomes extends JavaPlugin {
             if (value.equals("time")) continue;
             Material material = Material.valueOf(value);
             int requiredAmount = config.getInt(biomeSection + "." + value);
-            blocks.add(new ChangeableBlock(material, requiredAmount));
+            blocks.add(new ChangeableBlock(material, biomeSection, requiredAmount));
             validMaterials.add(material);
         }
 

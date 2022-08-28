@@ -1,8 +1,9 @@
 package me.maroon28.realisticbiomes.changeables;
 
 import org.bukkit.Material;
+import org.bukkit.block.Biome;
 
-public record ChangeableBlock(Material material, int amount) {
+public record ChangeableBlock(Material material, String biomeName, int amount) {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -11,12 +12,14 @@ public record ChangeableBlock(Material material, int amount) {
         ChangeableBlock that = (ChangeableBlock) o;
 
         if (amount != that.amount) return false;
+        if (!biomeName.equals(that.biomeName)) return false;
         return material == that.material;
     }
 
     @Override
     public int hashCode() {
         int result = material.hashCode();
+        result = 31 * result + biomeName.hashCode();
         result = 31 * result + amount;
         return result;
     }
