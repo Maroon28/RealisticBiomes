@@ -41,11 +41,6 @@ public final class RealisticBiomes extends JavaPlugin {
         deserializeSets();
     }
 
-    private void deserializeSets() {
-        changeableChunks = (Set<ChangeableChunk>) deserializeHashSet("changeable-chunks.dat");
-        chunksToStamp = (Set<Chunk>) deserializeHashSet("stampable-chunks.dat");
-    }
-
     @Override
     public void onDisable() {
         serializeHashSet("changeable-chunks.dat", (HashSet<?>) changeableChunks);
@@ -55,15 +50,18 @@ public final class RealisticBiomes extends JavaPlugin {
     private void runTasks() {
         var evolveTask = new ChunkEvolveTask(this);
         var stampTask = new ChunkStampTask(this);
-        // Run the evolve task every 120 seconds
-        evolveTask.runTaskTimer(this, 0, 2 * 20L);
-        // Run the stamp task every 60 seconds.
-        stampTask.runTaskTimer(this, 0, 1 * 20L);
+        evolveTask.runTaskTimer(this, 0, config.getInt("tasks.evolve-interval") * 20L);
+        stampTask.runTaskTimer(this, 0, config.getInt("tasks.stamp-interval") * 20L);
+    }
+
+    private void deserializeSets() {
+        changeableChunks = (Set<ChangeableChunk>) deserializeHashSet("changeable-chunks.dat");
+        chunksToStamp = (Set<Chunk>) deserializeHashSet("stampable-chunks.dat");
     }
 
 
     private void fetchChangeableBiomes() {
-        Set<String> configuredBiomes = config.getKeys(false);
+        Set<String> configuredBiomes = config.getConfigurationSection("biomes").getKeys(false);
         for (var biomeSection : configuredBiomes) {
             int configuredTime = config.getInt(biomeSection + "." + "time");
             // if the value is 0, default it to 1000
