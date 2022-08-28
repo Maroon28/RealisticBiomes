@@ -1,0 +1,6 @@
+name: RealisticBiomes
+version: '${project.version}'
+main: me.maroon28.realisticbiomes.RealisticBiomes
+api-version: 1.19
+authors: [ Maroon28 ]
+description: A plugin which dynamically changes chunk biomes depending on certain conditions 
