@@ -1,9 +1,10 @@
 package me.maroon28.realisticbiomes.changeables;
 
 import org.bukkit.Material;
-import org.bukkit.block.Biome;
 
-public record ChangeableBlock(Material material, String biomeName, int amount) {
+import java.io.Serializable;
+
+public record ChangeableBlock(Material material, String biomeName, int amount) implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

@@ -3,13 +3,13 @@ package me.maroon28.realisticbiomes;
 import me.maroon28.realisticbiomes.changeables.ChangeableBiome;
 import me.maroon28.realisticbiomes.changeables.ChangeableBlock;
 import me.maroon28.realisticbiomes.changeables.ChangeableChunk;
+import me.maroon28.realisticbiomes.commands.MainCommand;
 import me.maroon28.realisticbiomes.listeners.BlockListener;
 import me.maroon28.realisticbiomes.tasks.ChunkEvolveTask;
 import me.maroon28.realisticbiomes.tasks.ChunkStampTask;
 import org.bukkit.Chunk;
 import org.bukkit.Material;
 import org.bukkit.block.Biome;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -25,10 +25,9 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 public final class RealisticBiomes extends JavaPlugin {
-    FileConfiguration config = getConfig();
-    ArrayList<ChangeableBiome> loadedBiomes = new ArrayList<>();
+    public static ArrayList<ChangeableBiome> loadedBiomes = new ArrayList<>();
 
-    Set<Material> validMaterials = new HashSet<>();
+    public static Set<Material> validMaterials = new HashSet<>();
     public static Set<Chunk> chunksToStamp = new HashSet<>();
     public static Set<ChangeableChunk> changeableChunks = new HashSet<>();
 
@@ -38,59 +37,70 @@ public final class RealisticBiomes extends JavaPlugin {
         fetchChangeableBiomes();
         getServer().getPluginManager().registerEvents(new BlockListener(this), this);
         runTasks();
-        deserializeSets();
+        loadSets();
+        getCommand("realisticbiomes").setExecutor(new MainCommand(this));
     }
 
     @Override
     public void onDisable() {
-        serializeHashSet("changeable-chunks.dat", (HashSet<?>) changeableChunks);
-        serializeHashSet("stampable-chunks.dat", (HashSet<?>) chunksToStamp);
+        saveHashSet("changeable-chunks.dat", (HashSet<?>) changeableChunks);
+        saveHashSet("stampable-chunks.dat", (HashSet<?>) chunksToStamp);
     }
 
     private void runTasks() {
         var evolveTask = new ChunkEvolveTask(this);
         var stampTask = new ChunkStampTask(this);
+        var config = getConfig();
         evolveTask.runTaskTimer(this, 0, config.getInt("tasks.evolve-interval") * 20L);
         stampTask.runTaskTimer(this, 0, config.getInt("tasks.stamp-interval") * 20L);
     }
 
-    private void deserializeSets() {
-        changeableChunks = (Set<ChangeableChunk>) deserializeHashSet("changeable-chunks.dat");
-        chunksToStamp = (Set<Chunk>) deserializeHashSet("stampable-chunks.dat");
+    private void loadSets() {
+        changeableChunks = loadHashSet("changeable-chunks.dat");
+        chunksToStamp = loadHashSet("stampable-chunks.dat");
     }
 
 
-    private void fetchChangeableBiomes() {
-        Set<String> configuredBiomes = config.getConfigurationSection("biomes").getKeys(false);
+    public void fetchChangeableBiomes() {
+        var config = getConfig();
+        Set<String> configuredBiomes = config.getConfigurationSection("biomes.").getKeys(false);
         for (var biomeSection : configuredBiomes) {
-            int configuredTime = config.getInt(biomeSection + "." + "time");
-            // if the value is 0, default it to 1000
-            int time = configuredTime == 0 ? 1000 : configuredTime;
+            int configuredTime = config.getInt("biomes." + biomeSection + ".time");
+            // if the value is 0, default it to 100
+            int time = configuredTime == 0 ? 100 : configuredTime;
             var blocks = fetchChangeableBlocks(biomeSection);
-            var biome = Biome.valueOf(biomeSection);
-            loadedBiomes.add(new ChangeableBiome(biome, blocks, time));
+            try {
+                var biome = Biome.valueOf(biomeSection);
+                loadedBiomes.add(new ChangeableBiome(biome, blocks, time));
+            } catch (IllegalArgumentException exception) {
+                getLogger().warning("Biome " + biomeSection + " does not exist!" + " Is the name right?");
+            }
         }
 
     }
 
     private ArrayList<ChangeableBlock> fetchChangeableBlocks(String biomeSection) {
-
-        Set<String> biomeValues = config.getConfigurationSection(biomeSection).getKeys(false);
+        var config = getConfig();
+        Set<String> biomeValues = config.getConfigurationSection("biomes." + biomeSection).getKeys(false);
         if (biomeValues.isEmpty()) return null;
 
         ArrayList<ChangeableBlock> blocks = new ArrayList<>();
         for (var value : biomeValues) {
             if (value.equals("time")) continue;
-            Material material = Material.valueOf(value);
-            int requiredAmount = config.getInt(biomeSection + "." + value);
-            blocks.add(new ChangeableBlock(material, biomeSection, requiredAmount));
-            validMaterials.add(material);
+            int requiredAmount = config.getInt("biomes." + biomeSection + "." + value);
+            try {
+                Material material = Material.valueOf(value);
+                blocks.add(new ChangeableBlock(material, biomeSection, requiredAmount));
+                validMaterials.add(material);
+            }  catch (IllegalArgumentException exception) {
+                getLogger().warning("Material " + value + " for biome " + biomeSection + " does not exist! Is the name right?");
+            }
         }
 
         return blocks;
     }
 
-    private HashSet<?> deserializeHashSet(String fileName) {
+    private <T> HashSet<T> loadHashSet(String fileName)  {
         File file = new File(this.getDataFolder(), fileName);
         if (!file.exists()) {
             try {
@@ -98,24 +108,26 @@ public final class RealisticBiomes extends JavaPlugin {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
+            // There wasn't a file to read from, so just save time and return an empty set.
+            return new HashSet<>();
         }
         ObjectInputStream input;
-        HashSet<?> set;
+        HashSet<T> set;
         try {
             input = new ObjectInputStream(new GZIPInputStream(new FileInputStream(file)));
             Object readObject = input.readObject();
             input.close();
-            if(!(readObject instanceof HashSet<?>)) {
-                readObject = new HashSet<>();
+            if(!(readObject instanceof HashSet)) {
+                readObject = new HashSet<T>();
             }
-            set = (HashSet<?>) readObject;
+            set = (HashSet<T>) readObject;
         } catch (IOException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
         return set;
     }
 
-    private void serializeHashSet(String fileName, HashSet<?> set) {
+    private <T> void saveHashSet(String fileName, HashSet<T> set) {
         File file = new File(this.getDataFolder(), fileName);
         ObjectOutputStream output;
         try {

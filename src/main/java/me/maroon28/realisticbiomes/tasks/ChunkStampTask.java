@@ -13,8 +13,6 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import static me.maroon28.realisticbiomes.RealisticBiomes.chunksToStamp;
 
@@ -28,10 +26,10 @@ public class ChunkStampTask extends BukkitRunnable {
 
     @Override
     public void run() {
-        if (chunksToStamp.isEmpty()) return;
+        var iterator = chunksToStamp.iterator();
+        while (iterator.hasNext()) {
+            this.chunk = iterator.next();
 
-        for (Chunk chunk : chunksToStamp) {
-            this.chunk = chunk;
             ArrayList<ChangeableBiome> loadedBiomes = realisticBiomes.getLoadedBiomes();
             for (ChangeableBiome changeableBiome: loadedBiomes) {
 
@@ -47,7 +45,8 @@ public class ChunkStampTask extends BukkitRunnable {
                 }
             }
             // The chunk either got stamped or not, so no need to hold onto it.
-            chunksToStamp.remove(chunk);
+            // Remove it with the iterator to avoid ConcurrentModification Exceptions
+            iterator.remove();
         }
 
     }

@@ -26,17 +26,19 @@ public class ChunkEvolveTask extends BukkitRunnable {
 
     @Override
     public void run() {
-        if (changeableChunks.isEmpty()) return;
         int evolvedChunks = 0;
-        for (var chunk : changeableChunks) {
-            this.chunk = chunk.chunk();
-            Biome biome = chunk.changeableBiome().biome();
-            if (hasEnoughTime(chunk)) {
-                chunk.changeBiome();
+        var iterator = changeableChunks.iterator();
+        while (iterator.hasNext()) {
+            var changeableChunk = iterator.next();
+            this.chunk = changeableChunk.chunk();
+            Biome biome = changeableChunk.changeableBiome().biome();
+            if (hasEnoughTime(changeableChunk)) {
+                changeableChunk.changeBiome();
                 removeStamp();
                 saveGeneralBiome(biome);
                 evolvedChunks++;
-                changeableChunks.remove(chunk);
+                // The chunk has enough time now, so we can remove it from the set using the iterator
+                iterator.remove();
             }
         }
         if (evolvedChunks > 0) {

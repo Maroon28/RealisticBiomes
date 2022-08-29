@@ -3,4 +3,9 @@ version: '${project.version}'
 main: me.maroon28.realisticbiomes.RealisticBiomes
 api-version: 1.19
 authors: [ Maroon28 ]
-description: A plugin which dynamically changes chunk biomes depending on certain conditions 
+description: A plugin which dynamically changes chunk biomes depending on certain conditions
+commands:
+  realisticbiomes:
+    usage: "/realisticbiomes reload"
+    permission: realisticbiomes.reload
+    permission-message: "You do not have permission to run this command!"

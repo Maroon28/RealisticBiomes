@@ -5,9 +5,10 @@ import org.bukkit.World;
 import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
 
+import java.io.Serializable;
 import java.util.Objects;
 
-public record ChangeableChunk(Chunk chunk, ChangeableBiome changeableBiome) {
+public record ChangeableChunk(Chunk chunk, ChangeableBiome changeableBiome) implements Serializable {
     public void changeBiome() {
         Biome biome = changeableBiome.biome();
         int cX = chunk.getX() * 16;

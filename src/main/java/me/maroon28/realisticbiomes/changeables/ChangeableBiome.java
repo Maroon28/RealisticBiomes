@@ -2,10 +2,11 @@ package me.maroon28.realisticbiomes.changeables;
 
 import org.bukkit.block.Biome;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Objects;
 
-public record ChangeableBiome(Biome biome, ArrayList<ChangeableBlock> requiredBlocks, int time) {
+public record ChangeableBiome(Biome biome, ArrayList<ChangeableBlock> requiredBlocks, int time) implements Serializable {
     @Override
     public String toString() {
         return "ChangeableBiome{" +
