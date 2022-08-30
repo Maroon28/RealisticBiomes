@@ -27,9 +27,9 @@ import java.util.zip.GZIPOutputStream;
 public final class RealisticBiomes extends JavaPlugin {
     public static ArrayList<EvolvableBiome> loadedBiomes = new ArrayList<>();
 
-    public static Set<Material> validMaterials = new HashSet<>();
-    public static Set<Chunk> chunksToStamp = new HashSet<>();
-    public static Set<EvolvableChunk> evolvableChunks = new HashSet<>();
+    public static HashSet<Material> validMaterials = new HashSet<>();
+    public static HashSet<Chunk> chunksToStamp = new HashSet<>();
+    public static HashSet<EvolvableChunk> evolvableChunks = new HashSet<>();
 
     @Override
     public void onEnable() {
@@ -43,8 +43,8 @@ public final class RealisticBiomes extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        saveHashSet("changeable-chunks.dat", (HashSet<?>) evolvableChunks);
-        saveHashSet("stampable-chunks.dat", (HashSet<?>) chunksToStamp);
+        saveHashSet("changeable-chunks.dat", evolvableChunks);
+        saveHashSet("stampable-chunks.dat",  chunksToStamp);
     }
 
     private void runTasks() {
