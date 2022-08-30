@@ -1,8 +1,8 @@
 package me.maroon28.realisticbiomes;
 
-import me.maroon28.realisticbiomes.changeables.ChangeableBiome;
-import me.maroon28.realisticbiomes.changeables.ChangeableBlock;
-import me.maroon28.realisticbiomes.changeables.ChangeableChunk;
+import me.maroon28.realisticbiomes.evolvables.EvolvableBiome;
+import me.maroon28.realisticbiomes.evolvables.EvolvableChunk;
+import me.maroon28.realisticbiomes.evolvables.RequiredBlock;
 import me.maroon28.realisticbiomes.commands.MainCommand;
 import me.maroon28.realisticbiomes.listeners.BlockListener;
 import me.maroon28.realisticbiomes.tasks.ChunkEvolveTask;
@@ -25,11 +25,11 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 public final class RealisticBiomes extends JavaPlugin {
-    public static ArrayList<ChangeableBiome> loadedBiomes = new ArrayList<>();
+    public static ArrayList<EvolvableBiome> loadedBiomes = new ArrayList<>();
 
     public static Set<Material> validMaterials = new HashSet<>();
     public static Set<Chunk> chunksToStamp = new HashSet<>();
-    public static Set<ChangeableChunk> changeableChunks = new HashSet<>();
+    public static Set<EvolvableChunk> evolvableChunks = new HashSet<>();
 
     @Override
     public void onEnable() {
@@ -43,7 +43,7 @@ public final class RealisticBiomes extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        saveHashSet("changeable-chunks.dat", (HashSet<?>) changeableChunks);
+        saveHashSet("changeable-chunks.dat", (HashSet<?>) evolvableChunks);
         saveHashSet("stampable-chunks.dat", (HashSet<?>) chunksToStamp);
     }
 
@@ -56,7 +56,7 @@ public final class RealisticBiomes extends JavaPlugin {
     }
 
     private void loadSets() {
-        changeableChunks = loadHashSet("changeable-chunks.dat");
+        evolvableChunks = loadHashSet("changeable-chunks.dat");
         chunksToStamp = loadHashSet("stampable-chunks.dat");
     }
 
@@ -71,7 +71,7 @@ public final class RealisticBiomes extends JavaPlugin {
             var blocks = fetchChangeableBlocks(biomeSection);
             try {
                 var biome = Biome.valueOf(biomeSection);
-                loadedBiomes.add(new ChangeableBiome(biome, blocks, time));
+                loadedBiomes.add(new EvolvableBiome(biome, blocks, time));
             } catch (IllegalArgumentException exception) {
                 getLogger().warning("Biome " + biomeSection + " does not exist!" + " Is the name right?");
             }
@@ -79,18 +79,18 @@ public final class RealisticBiomes extends JavaPlugin {
 
     }
 
-    private ArrayList<ChangeableBlock> fetchChangeableBlocks(String biomeSection) {
+    private ArrayList<RequiredBlock> fetchChangeableBlocks(String biomeSection) {
         var config = getConfig();
         Set<String> biomeValues = config.getConfigurationSection("biomes." + biomeSection).getKeys(false);
         if (biomeValues.isEmpty()) return null;
 
-        ArrayList<ChangeableBlock> blocks = new ArrayList<>();
+        ArrayList<RequiredBlock> blocks = new ArrayList<>();
         for (var value : biomeValues) {
             if (value.equals("time")) continue;
             int requiredAmount = config.getInt("biomes." + biomeSection + "." + value);
             try {
                 Material material = Material.valueOf(value);
-                blocks.add(new ChangeableBlock(material, biomeSection, requiredAmount));
+                blocks.add(new RequiredBlock(material, biomeSection, requiredAmount));
                 validMaterials.add(material);
             }  catch (IllegalArgumentException exception) {
                 getLogger().warning("Material " + value + " for biome " + biomeSection + " does not exist! Is the name right?");
@@ -141,7 +141,7 @@ public final class RealisticBiomes extends JavaPlugin {
 
     }
 
-    public ArrayList<ChangeableBiome> getLoadedBiomes() {
+    public ArrayList<EvolvableBiome> getLoadedBiomes() {
         return loadedBiomes;
     }
 

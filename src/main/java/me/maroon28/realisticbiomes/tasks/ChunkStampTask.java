@@ -1,9 +1,9 @@
 package me.maroon28.realisticbiomes.tasks;
 
 import me.maroon28.realisticbiomes.RealisticBiomes;
-import me.maroon28.realisticbiomes.changeables.ChangeableBiome;
-import me.maroon28.realisticbiomes.changeables.ChangeableBlock;
-import me.maroon28.realisticbiomes.changeables.ChangeableChunk;
+import me.maroon28.realisticbiomes.evolvables.EvolvableBiome;
+import me.maroon28.realisticbiomes.evolvables.EvolvableChunk;
+import me.maroon28.realisticbiomes.evolvables.RequiredBlock;
 import org.bukkit.Chunk;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -30,18 +30,18 @@ public class ChunkStampTask extends BukkitRunnable {
         while (iterator.hasNext()) {
             this.chunk = iterator.next();
 
-            ArrayList<ChangeableBiome> loadedBiomes = realisticBiomes.getLoadedBiomes();
-            for (ChangeableBiome changeableBiome: loadedBiomes) {
+            ArrayList<EvolvableBiome> loadedBiomes = realisticBiomes.getLoadedBiomes();
+            for (EvolvableBiome evolvableBiome : loadedBiomes) {
 
                 // If there's a saved biome, check if its the same as the one we're currently at
                 // No need to stamp if the biome isn't going to be different.
-                if (getSavedBiome() != null && getSavedBiome().equals(changeableBiome.biome())) continue;
+                if (getSavedBiome() != null && getSavedBiome().equals(evolvableBiome.biome())) continue;
 
-                for (ChangeableBlock block: changeableBiome.requiredBlocks()) {
+                for (RequiredBlock block: evolvableBiome.requiredBlocks()) {
                     int amount = getMaterialAmount(block.material());
                     // One or more of the required blocks is less than needed, break
                     if (block.amount() > amount) break;
-                    stampChunk(changeableBiome);
+                    stampChunk(evolvableBiome);
                 }
             }
             // The chunk either got stamped or not, so no need to hold onto it.
@@ -60,7 +60,7 @@ public class ChunkStampTask extends BukkitRunnable {
         return null;
     }
 
-    private void stampChunk(ChangeableBiome biome) {
+    private void stampChunk(EvolvableBiome biome) {
         var container = chunk.getPersistentDataContainer();
         var key = new NamespacedKey(realisticBiomes, "time-until-change");
         // The chunk is already stamped
@@ -68,7 +68,7 @@ public class ChunkStampTask extends BukkitRunnable {
         // Save a timestamp of when it became viable to change.
         container.set(key, PersistentDataType.LONG, System.currentTimeMillis());
         // Move it to the evolving chunk map
-        RealisticBiomes.changeableChunks.add(new ChangeableChunk(chunk, biome));
+        RealisticBiomes.evolvableChunks.add(new EvolvableChunk(chunk, biome));
     }
 
     private int getMaterialAmount(Material material) {

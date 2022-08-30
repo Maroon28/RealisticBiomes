@@ -1,8 +1,25 @@
+
+# How often should our check tasks run? Not recommended to change unless you want to see the changes quicker.
 tasks:
   # How often should we check modified chunks for potential biome changes? Time in seconds
   stamp-interval: 360
   # How often should chunks evolve if all conditions are met? Recommended to keep it the same or higher than the stamp interval
   evolve-interval: 400
+
+# Which worlds should we run our checks on?
+# Try only including overworld type worlds. 
+enabled-worlds:
+  - world
+
+# Biomes that will never be changed go here.
+# Since the biome evolution usually goes through the entire chunk, it's recommended to keep the included cave biomes
+# As you wouldn't want instances of lush caves or deep dark biomes transforming into plains etc.
+blacklisted-biomes:
+  - LUSH_CAVES
+  - DRIPSTONE_CAVES
+  - DEEP_DARK
+
+use-biome-blacklist-as-whitelist: false
 
 biomes:
   # Biome Name goes here

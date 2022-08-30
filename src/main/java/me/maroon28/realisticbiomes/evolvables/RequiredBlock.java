@@ -1,16 +1,16 @@
-package me.maroon28.realisticbiomes.changeables;
+package me.maroon28.realisticbiomes.evolvables;
 
 import org.bukkit.Material;
 
 import java.io.Serializable;
 
-public record ChangeableBlock(Material material, String biomeName, int amount) implements Serializable {
+public record RequiredBlock(Material material, String biomeName, int amount) implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        ChangeableBlock that = (ChangeableBlock) o;
+        RequiredBlock that = (RequiredBlock) o;
 
         if (amount != that.amount) return false;
         if (!biomeName.equals(that.biomeName)) return false;
@@ -27,7 +27,7 @@ public record ChangeableBlock(Material material, String biomeName, int amount) i
 
     @Override
     public String toString() {
-        return "ChangeableBlock{" +
+        return "RequiredBlock{" +
                 "material=" + material +
                 ", amount=" + amount +
                 '}';

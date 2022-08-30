@@ -1,39 +1,45 @@
 package me.maroon28.realisticbiomes.tasks;
 
 import me.maroon28.realisticbiomes.RealisticBiomes;
-import me.maroon28.realisticbiomes.changeables.ChangeableChunk;
+import me.maroon28.realisticbiomes.evolvables.EvolvableChunk;
 import org.bukkit.Chunk;
 import org.bukkit.NamespacedKey;
+import org.bukkit.World;
 import org.bukkit.block.Biome;
+import org.bukkit.block.Block;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static me.maroon28.realisticbiomes.RealisticBiomes.changeableChunks;
+import static me.maroon28.realisticbiomes.RealisticBiomes.evolvableChunks;
 
 public class ChunkEvolveTask extends BukkitRunnable {
     private final @NotNull Logger logger;
+    private final FileConfiguration config;
     private Chunk chunk;
     private final RealisticBiomes realisticBiomes;
 
     public ChunkEvolveTask(RealisticBiomes realisticBiomes) {
         this.realisticBiomes = realisticBiomes;
         logger = realisticBiomes.getLogger();
+        config = realisticBiomes.getConfig();
     }
 
     @Override
     public void run() {
         int evolvedChunks = 0;
-        var iterator = changeableChunks.iterator();
+        var iterator = evolvableChunks.iterator();
         while (iterator.hasNext()) {
-            var changeableChunk = iterator.next();
-            this.chunk = changeableChunk.chunk();
-            Biome biome = changeableChunk.changeableBiome().biome();
-            if (hasEnoughTime(changeableChunk)) {
-                changeableChunk.changeBiome();
+            var evolvableChunk = iterator.next();
+            this.chunk = evolvableChunk.chunk();
+            Biome biome = evolvableChunk.evolvableBiome().biome();
+            if (hasEnoughTime(evolvableChunk)) {
+                changeBiome(evolvableChunk);
                 removeStamp();
                 saveGeneralBiome(biome);
                 evolvedChunks++;
@@ -46,9 +52,9 @@ public class ChunkEvolveTask extends BukkitRunnable {
         }
     }
 
-    private boolean hasEnoughTime(ChangeableChunk chunk) {
+    private boolean hasEnoughTime(EvolvableChunk chunk) {
         long chunkTime = getStampedTime();
-        int neededTime = chunk.changeableBiome().time() * 1000;
+        int neededTime = chunk.evolvableBiome().time() * 1000;
         return System.currentTimeMillis() - chunkTime > neededTime;
     }
 
@@ -73,6 +79,32 @@ public class ChunkEvolveTask extends BukkitRunnable {
         var key = new NamespacedKey(realisticBiomes, "saved-biome");
         // If the chunk already has a saved biome, override it
         container.set(key, PersistentDataType.STRING, biome.toString());
+    }
+
+    private void changeBiome(EvolvableChunk evolvableChunk) {
+        Biome biome = evolvableChunk.evolvableBiome().biome();
+        Chunk chunk = evolvableChunk.chunk();
+        int cX = chunk.getX() * 16;
+        int cZ = chunk.getZ() * 16;
+        World world = chunk.getWorld();
+        for (int x = 0; x < 16; x++) {
+            for (int z = 0; z < 16; z++) {
+                for (int y = 0; y <= world.getMaxHeight(); y++) {
+                    Block block = world.getBlockAt(x + cX, y, z + cZ);
+                    if (canChangeBiome(block))
+                        block.setBiome(biome);
+                }
+            }
+        }
+    }
+
+    private boolean canChangeBiome(Block block) {
+        List<String> blacklistedBiomes = config.getStringList("blacklisted-biomes");
+        if (config.getBoolean("use-biome-blacklist-as-whitelist")) {
+            return blacklistedBiomes.contains(block.getBiome().toString());
+        } else {
+            return !blacklistedBiomes.contains(block.getBiome().toString());
+        }
     }
 
     @NotNull

@@ -6,6 +6,7 @@ import org.bukkit.Chunk;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
@@ -23,9 +24,11 @@ import java.util.List;
 public class BlockListener implements Listener {
     private Chunk chunk;
     private final RealisticBiomes realisticBiomes;
+    private final @NotNull FileConfiguration config;
 
     public BlockListener(RealisticBiomes realisticBiomes) {
         this.realisticBiomes = realisticBiomes;
+        config = realisticBiomes.getConfig();
     }
 
     @EventHandler
@@ -109,8 +112,10 @@ public class BlockListener implements Listener {
         }
     }
 
-    private boolean queueChunk() {
-        return RealisticBiomes.chunksToStamp.add(chunk);
+    private void queueChunk() {
+        List<String> enabledWorlds = config.getStringList("enabled-worlds");
+        if (enabledWorlds.contains(chunk.getWorld().getName()))
+            RealisticBiomes.chunksToStamp.add(chunk);
     }
 
     private boolean isValidMaterial(Material type) {

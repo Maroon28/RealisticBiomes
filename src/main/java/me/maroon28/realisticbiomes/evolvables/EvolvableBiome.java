@@ -1,4 +1,4 @@
-package me.maroon28.realisticbiomes.changeables;
+package me.maroon28.realisticbiomes.evolvables;
 
 import org.bukkit.block.Biome;
 
@@ -6,10 +6,10 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Objects;
 
-public record ChangeableBiome(Biome biome, ArrayList<ChangeableBlock> requiredBlocks, int time) implements Serializable {
+public record EvolvableBiome(Biome biome, ArrayList<RequiredBlock> requiredBlocks, int time) implements Serializable {
     @Override
     public String toString() {
-        return "ChangeableBiome{" +
+        return "EvolvableBiome{" +
                 "biome=" + biome +
                 ", requiredBlocks=" + requiredBlocks +
                 ", time=" + time +
@@ -21,7 +21,7 @@ public record ChangeableBiome(Biome biome, ArrayList<ChangeableBlock> requiredBl
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        ChangeableBiome that = (ChangeableBiome) o;
+        EvolvableBiome that = (EvolvableBiome) o;
 
         if (time != that.time) return false;
         if (biome != that.biome) return false;
