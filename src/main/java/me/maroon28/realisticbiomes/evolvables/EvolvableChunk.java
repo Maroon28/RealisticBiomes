@@ -9,20 +9,6 @@ import java.io.Serializable;
 import java.util.Objects;
 
 public record EvolvableChunk(Chunk chunk, EvolvableBiome evolvableBiome) implements Serializable {
-    public void changeBiome() {
-        Biome biome = evolvableBiome.biome();
-        int cX = chunk.getX() * 16;
-        int cZ = chunk.getZ() * 16;
-        World world = chunk.getWorld();
-        for (int x = 0; x < 16; x++) {
-            for (int z = 0; z < 16; z++) {
-                for (int y = 0; y <= world.getMaxHeight(); y++) {
-                    Block block = world.getBlockAt(x + cX, y, z + cZ);
-                    block.setBiome(biome);
-                }
-            }
-        }
-    }
 
     @Override
     public String toString() {
