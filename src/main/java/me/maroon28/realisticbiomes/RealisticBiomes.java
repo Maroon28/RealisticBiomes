@@ -106,37 +106,43 @@ public final class RealisticBiomes extends JavaPlugin {
             try {
                 file.createNewFile();
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                e.printStackTrace();
             }
             // There wasn't a file to read from, so just save time and return an empty set.
             return new HashSet<>();
         }
-        ObjectInputStream input;
         HashSet<T> set;
         try {
-            input = new ObjectInputStream(new GZIPInputStream(new FileInputStream(file)));
-            Object readObject = input.readObject();
-            input.close();
+            FileInputStream fileStream = new FileInputStream(file);
+            GZIPInputStream zipStream = new GZIPInputStream(fileStream);
+            ObjectInputStream objectStream = new ObjectInputStream(zipStream);
+            Object readObject = objectStream.readObject();
+            objectStream.close();
+            zipStream.close();
+            fileStream.close();
             if(!(readObject instanceof HashSet)) {
                 readObject = new HashSet<T>();
             }
             set = (HashSet<T>) readObject;
         } catch (IOException | ClassNotFoundException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
+            return new HashSet<>();
         }
         return set;
     }
 
     private <T> void saveHashSet(String fileName, HashSet<T> set) {
         File file = new File(this.getDataFolder(), fileName);
-        ObjectOutputStream output;
         try {
-            output = new ObjectOutputStream(new GZIPOutputStream(new FileOutputStream(file)));
+            FileOutputStream fileStream = new FileOutputStream(file);
+            GZIPOutputStream zipStream = new GZIPOutputStream(fileStream);
+            ObjectOutputStream output = new ObjectOutputStream(zipStream);
             output.writeObject(set);
             output.flush();
+            zipStream.finish();
             output.close();
-        } catch (IOException ex) {
-            ex.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
     }
