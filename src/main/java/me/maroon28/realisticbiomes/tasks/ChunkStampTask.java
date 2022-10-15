@@ -13,6 +13,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import static me.maroon28.realisticbiomes.RealisticBiomes.chunksToStamp;
 
@@ -27,13 +28,12 @@ public class ChunkStampTask extends BukkitRunnable {
     @Override
     public void run() {
         var iterator = chunksToStamp.iterator();
+        ArrayList<EvolvableBiome> loadedBiomes = realisticBiomes.getLoadedBiomes();
         while (iterator.hasNext()) {
             this.chunk = iterator.next();
 
-            ArrayList<EvolvableBiome> loadedBiomes = realisticBiomes.getLoadedBiomes();
             for (EvolvableBiome evolvableBiome : loadedBiomes) {
-
-                // If there's a saved biome, check if its the same as the one we're currently at
+                // If there's a saved biome, check if it's the same as the one we're currently at
                 // No need to stamp if the biome isn't going to be different.
                 if (getSavedBiome() != null && getSavedBiome().equals(evolvableBiome.biome())) continue;
 
