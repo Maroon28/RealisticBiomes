@@ -2,11 +2,16 @@ package me.maroon28.realisticbiomes.listeners;
 
 import io.papermc.paper.event.block.BlockBreakBlockEvent;
 import me.maroon28.realisticbiomes.RealisticBiomes;
+import me.maroon28.realisticbiomes.api.BlockAddEvent;
+import me.maroon28.realisticbiomes.api.BlockListAddEvent;
+import me.maroon28.realisticbiomes.api.BlockListRemoveEvent;
+import me.maroon28.realisticbiomes.api.BlockRemoveEvent;
 import org.bukkit.Chunk;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
@@ -32,74 +37,82 @@ public class BlockListener implements Listener {
     }
 
     @EventHandler
-    public void onBlockBreak(BlockBreakEvent event) {
-        Material type = event.getBlock().getType();
-        chunk = event.getBlock().getChunk();
-        if (decreaseMaterialAmount(type, 1)) {
-            queueChunk();
-        }
-    }
-
-    @EventHandler
-    public void onBlockPlace(BlockPlaceEvent event) {
+    public void onBlockAdd(BlockAddEvent event) {
         Material type = event.getBlock().getType();
         chunk = event.getBlock().getChunk();
         if (increaseMaterialAmount(type, 1)) {
             queueChunk();
         }
     }
-
     @EventHandler
-    public void onBlockBreakBlock(BlockBreakBlockEvent event) {
+    public void onBlockRemove(BlockRemoveEvent event) {
         Material type = event.getBlock().getType();
         chunk = event.getBlock().getChunk();
         if (decreaseMaterialAmount(type, 1)) {
             queueChunk();
         }
+    }
+
+    @EventHandler
+    public void onBlockListAdd(BlockListAddEvent event) {
+        List<Block> blocks = event.getBlockList();
+        if (blocks.isEmpty()) return;
+        chunk = blocks.get(0).getChunk();
+        for (Block block: blocks) {
+            chunk = chunk == block.getChunk() ? chunk : block.getChunk();
+            if (increaseMaterialAmount(block.getType(), 1)) {
+                queueChunk();
+            }
+        }
+    }
+    @EventHandler
+    public void onBlockListRemove(BlockListRemoveEvent event) {
+        List<Block> blocks = event.getBlockList();
+        if (blocks.isEmpty()) return;
+        chunk = blocks.get(0).getChunk();
+        for (Block block: blocks) {
+            chunk = chunk == block.getChunk() ? chunk : block.getChunk();
+            if (increaseMaterialAmount(block.getType(), 1)) {
+                queueChunk();
+            }
+        }
+    }
+
+    // Regular event listeners, delegate to custom events when possible to avoid duplicate code.
+
+    @EventHandler
+    public void onBlockBreak(BlockBreakEvent event) {
+        callEvent(new BlockRemoveEvent(event.getBlock()));
+    }
+
+    @EventHandler
+    public void onBlockPlace(BlockPlaceEvent event) {
+        callEvent(new BlockAddEvent(event.getBlock()));
+    }
+
+    @EventHandler
+    public void onBlockBreakBlock(BlockBreakBlockEvent event) {
+        callEvent(new BlockRemoveEvent(event.getBlock()));
     }
 
     @EventHandler
     public void onBlockExplode(BlockExplodeEvent event) {
-        List<Block> blocks = event.blockList();
-        if (blocks.isEmpty()) return;
-        chunk = event.getBlock().getChunk();
-        for (Block block: blocks) {
-            chunk = chunk == block.getChunk() ? chunk : block.getChunk();
-            if (decreaseMaterialAmount(block.getType(), 1)) {
-                queueChunk();
-            }
-        }
+        callEvent(new BlockListRemoveEvent(event.blockList()));
     }
 
     @EventHandler
     public void onEntityExplode(EntityExplodeEvent event) {
-        List<Block> blocks = event.blockList();
-        if (blocks.isEmpty()) return;
-        chunk = event.getEntity().getChunk();
-        for (Block block: blocks) {
-            chunk = chunk == block.getChunk() ? chunk : block.getChunk();
-            if (decreaseMaterialAmount(block.getType(), 1)) {
-                queueChunk();
-            }
-        }
+        callEvent(new BlockListRemoveEvent(event.blockList()));
     }
 
     @EventHandler
     public void onLeavesDecay(LeavesDecayEvent event) {
-        Material type = event.getBlock().getType();
-        chunk = event.getBlock().getChunk();
-        if (decreaseMaterialAmount(type, 1)) {
-            queueChunk();
-        }
+        callEvent(new BlockRemoveEvent(event.getBlock()));
     }
 
     @EventHandler
     public void onBlockBurn(BlockBurnEvent event) {
-        Material type = event.getBlock().getType();
-        chunk = event.getBlock().getChunk();
-        if (decreaseMaterialAmount(type, 1)) {
-            queueChunk();
-        }
+        callEvent(new BlockRemoveEvent(event.getBlock()));
     }
 
     @EventHandler
@@ -116,6 +129,10 @@ public class BlockListener implements Listener {
         List<String> enabledWorlds = config.getStringList("enabled-worlds");
         if (enabledWorlds.contains(chunk.getWorld().getName()))
             RealisticBiomes.chunksToStamp.add(chunk);
+    }
+
+    private void callEvent(Event event) {
+        realisticBiomes.getServer().getPluginManager().callEvent(event);
     }
 
     private boolean isValidMaterial(Material type) {
