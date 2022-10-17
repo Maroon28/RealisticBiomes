@@ -40,7 +40,7 @@ public class BlockListener implements Listener {
     public void onBlockAdd(BlockAddEvent event) {
         Material type = event.getBlock().getType();
         chunk = event.getBlock().getChunk();
-        if (increaseMaterialAmount(type, 1)) {
+        if (increaseMaterialAmount(type)) {
             queueChunk();
         }
     }
@@ -48,7 +48,7 @@ public class BlockListener implements Listener {
     public void onBlockRemove(BlockRemoveEvent event) {
         Material type = event.getBlock().getType();
         chunk = event.getBlock().getChunk();
-        if (decreaseMaterialAmount(type, 1)) {
+        if (decreaseMaterialAmount(type)) {
             queueChunk();
         }
     }
@@ -60,7 +60,7 @@ public class BlockListener implements Listener {
         chunk = blocks.get(0).getChunk();
         for (Block block: blocks) {
             chunk = chunk == block.getChunk() ? chunk : block.getChunk();
-            if (increaseMaterialAmount(block.getType(), 1)) {
+            if (increaseMaterialAmount(block.getType())) {
                 queueChunk();
             }
         }
@@ -72,7 +72,7 @@ public class BlockListener implements Listener {
         chunk = blocks.get(0).getChunk();
         for (Block block: blocks) {
             chunk = chunk == block.getChunk() ? chunk : block.getChunk();
-            if (increaseMaterialAmount(block.getType(), 1)) {
+            if (increaseMaterialAmount(block.getType())) {
                 queueChunk();
             }
         }
@@ -119,7 +119,7 @@ public class BlockListener implements Listener {
     public void onTreeGrow(StructureGrowEvent event) {
         chunk = event.getLocation().getChunk();
         for (var block: event.getBlocks()) {
-            if (increaseMaterialAmount(block.getType(), 1)) {
+            if (increaseMaterialAmount(block.getType())) {
                 queueChunk();
             }
         }
@@ -157,16 +157,16 @@ public class BlockListener implements Listener {
         }
     }
 
-    private boolean increaseMaterialAmount(Material material, int increase) {
+    private boolean increaseMaterialAmount(Material material) {
         if (!isValidMaterial(material)) return false;
-        int amount = getMaterialAmount(material) + increase;
+        int amount = getMaterialAmount(material) + 1;
         storeMaterialAmount(material, amount);
         return true;
     }
 
-    private boolean decreaseMaterialAmount(Material material, int decrease) {
+    private boolean decreaseMaterialAmount(Material material) {
         if (!isValidMaterial(material)) return false;
-        int amount = getMaterialAmount(material) - decrease;
+        int amount = getMaterialAmount(material) - 1;
         storeMaterialAmount(material, Math.max(0, amount));
         return true;
     }
