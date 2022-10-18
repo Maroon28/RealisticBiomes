@@ -1,4 +1,4 @@
-
+debug: false
 # How often should our check tasks run? Not recommended to change unless you want to see the changes quicker.
 tasks:
   # How often should we check modified chunks for potential biome changes? Time in seconds

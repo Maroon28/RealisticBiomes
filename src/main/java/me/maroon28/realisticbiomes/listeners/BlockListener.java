@@ -25,6 +25,7 @@ import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.logging.Level;
 
 public class BlockListener implements Listener {
     private Chunk chunk;
@@ -139,6 +140,10 @@ public class BlockListener implements Listener {
         return realisticBiomes.getValidMaterials().contains(type);
     }
 
+    private void debug(String message) {
+        if (!config.getBoolean("debug")) return;
+        realisticBiomes.getLogger().log(Level.INFO, message);
+    }
     private void storeMaterialAmount(Material material, int amount) {
         var container = chunk.getPersistentDataContainer();
         var key = getKey(material);
@@ -161,6 +166,7 @@ public class BlockListener implements Listener {
         if (!isValidMaterial(material)) return false;
         int amount = getMaterialAmount(material) + 1;
         storeMaterialAmount(material, amount);
+        debug("Increased amount of " + material + " to " + amount);
         return true;
     }
 
@@ -168,6 +174,7 @@ public class BlockListener implements Listener {
         if (!isValidMaterial(material)) return false;
         int amount = getMaterialAmount(material) - 1;
         storeMaterialAmount(material, Math.max(0, amount));
+        debug("Decreased amount of " + material + " to " + amount);
         return true;
     }
 
