@@ -15,6 +15,10 @@ public class BlockListAddEvent extends Event {
         this.block = block;
     }
 
+    public static HandlerList getHandlerList() {
+        return HANDLERS;
+    }
+
     @Override
     public @NotNull HandlerList getHandlers() {
         return HANDLERS;
